@@ -126,9 +126,15 @@ def update_graph(selected_game, selected_players):
 )
 def update_chart(selected_project):
     if selected_project == 'A':
-        fig = px.line(df_A, x=df_A.index, y=['TRUE', 'predict'], title='kvrh')
+
+        fig = px.line(df_A, x=df_A.index, y=['TRUE', 'predict', 'AE'], title='kvrh')
+        fig.update_layout(
+            barmode='group',
+            title=f"MAE = {df_A.MAE[0]}",
+        )
+
     else:
-        fig = px.line(df_B, x=df_B.index, y=['TRUE', 'predict'], title='jdft2d')
+        fig = px.line(df_B, x=df_B.index, y=['TRUE', 'predict', 'AE'], title='jdft2d')
     return fig
 
 
