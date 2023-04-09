@@ -1,80 +1,80 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.graph_objs as go
+import plotly.express as px
 import pandas as pd
 
-# 读取数据集
-df_A = pd.read_csv('cgcnn_log_kvrh.csv')
-df_B = pd.read_csv('cgcnn_log_kvrh.csv')
-df_C = pd.read_csv('test_results.csv')
-df_D = pd.read_csv('test_results.csv')
+# read the data from the 'megnet_kvrh.csv' and 'megnet_dielectric.csv' files
+df_C = pd.read_csv('megnet_kvrh.csv')
+df_D = pd.read_csv('megnet_dielectric.csv')
 
-# 创建Dash应用程序
+# define the app
 app = dash.Dash(__name__)
 
-# 创建布局
+# define the layout of the app
 app.layout = html.Div(children=[
-    html.H1(children='我的 Dash 应用程序'),
-
-    # 创建折线图和柱状图的容器
-    html.Div([
-        dcc.Dropdown(
-            id='dropdown-A',
-            options=[
-                {'label': '数据集A', 'value': 'A'},
-                {'label': '数据集B', 'value': 'B'}
+    html.H1(children='Box Plot'),
+    dcc.Dropdown(
+        id='data-dropdown',
+        options=[
+            {'label': 'KVRH Data', 'value': 'C'},
+            {'label': 'Dielectric Data', 'value': 'D'}
+        ],
+        value='C'
+    ),
+    dcc.Graph(
+        id='box-plot',
+        figure={
+            'data': [
+                {'y': df_C[col], 'type': 'box', 'name': col} for col in ['mae', 'mape', 'rmse']
             ],
-            value='A'
-        ),
-        dcc.Graph(id='line-chart')
-    ]),
-
-    html.Div([
-        dcc.Dropdown(
-            id='dropdown-C',
-            options=[
-                {'label': '数据集C', 'value': 'C'},
-                {'label': '数据集D', 'value': 'D'}
-            ],
-            value='C'
-        ),
-        dcc.Graph(id='bar-chart')
-    ])
+            'layout': {
+                'title': 'Box Plot of mae, mape, and rmse values',
+                'yaxis': {'title': 'Values'}
+            }
+        }
+    ),
+    html.Div(
+        id='data-description',
+        children=[
+            html.P(id='kvrh-description', children='KVRH is a measure of a material\'s resistance to indentation'),
+            html.P(id='dielectric-description', children='Dielectric refers to the ability of a material to store electrical energy')
+        ]
+    )
 ])
 
-# 创建回调函数，根据下拉列表选项更新图形
+# define the callback function for the dropdown menu
 @app.callback(
-    dash.dependencies.Output('line-chart', 'figure'),
-    [dash.dependencies.Input('dropdown-A', 'value')]
+    dash.dependencies.Output('box-plot', 'figure'),
+    [dash.dependencies.Input('data-dropdown', 'value')]
 )
-def update_line_chart(value):
-    if value == 'A':
-        df = df_A
+def update_figure(selected_data):
+    if selected_data == 'C':
+        data = df_C
     else:
-        df = df_B
+        data = df_D
+    return {
+        'data': [
+            {'y': data[col], 'type': 'box', 'name': col} for col in ['mae', 'mape', 'rmse']
+        ],
+        'layout': {
+            'title': 'Box Plot of mae, mape, and rmse values for ' + selected_data + ' Data',
+            'yaxis': {'title': 'Values'}
+        }
+    }
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df['x'], y=df['y'], mode='lines', name='折线图'))
-    fig.update_layout(title='折线图')
-
-    return fig
-
+# define the callback function for the data descriptions
 @app.callback(
-    dash.dependencies.Output('bar-chart', 'figure'),
-    [dash.dependencies.Input('dropdown-C', 'value')]
+    dash.dependencies.Output('kvrh-description', 'style'),
+    dash.dependencies.Output('dielectric-description', 'style'),
+    [dash.dependencies.Input('data-dropdown', 'value')]
 )
-def update_bar_chart(value):
-    if value == 'C':
-        df = df_C
+def update_data_description(selected_data):
+    if selected_data == 'C':
+        return {'display': 'block'}, {'display': 'none'}
     else:
-        df = df_D
+        return {'display': 'none'}, {'display': 'block'}
 
-    fig = go.Figure()
-    fig.add_trace(go.Bar(x=df['x'], y=df['y'], name='柱状图'))
-    fig.update_layout(title='柱状图')
-
-    return fig
-
+# run the app
 if __name__ == '__main__':
     app.run_server(debug=True)

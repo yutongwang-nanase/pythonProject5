@@ -1,47 +1,33 @@
-import pandas as pd
-import plotly.express as px
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
 
-# 读取数据
-df_A = pd.read_csv('cgcnn_log_kvrh.csv')
-df_B = pd.read_csv('test_results.csv')
-
-# 创建 Dash 应用
 app = dash.Dash(__name__)
 
-# 布局
+# 创建图表数据
+x = [1, 2, 3, 4, 5]
+y = [1, 3, 2, 4, 3]
+
+# 创建页面布局
 app.layout = html.Div([
-    html.H1("项目 A 和项目 B 的曲线"),
-    # 选择项目的 Dropdown 组件
-    dcc.Dropdown(
-        id='project-dropdown',
-        options=[
-            {'label': '项目A', 'value': 'A'},
-            {'label': '项目B', 'value': 'B'}
-        ],
-        value='A'  # 默认选择项目A
-    ),
-    # 折线图
-    dcc.Graph(id='line-chart')
+    # 左侧导航栏
+    html.Div([
+        html.H3('导航'),
+        html.Ul([
+            html.Li(html.A('图表1', href='#chart1')),
+            html.Li(html.A('图表2', href='#chart2')),
+            html.Li(html.A('图表3', href='#chart3'))
+        ])
+    ], style={'position': 'fixed', 'width': '20%'}),
+
+    # 右侧容器
+    html.Div([
+        dcc.Graph(id='chart1', figure={'data': [{'x': x, 'y': y, 'type': 'line'}]}),
+        dcc.Graph(id='chart2', figure={'data': [{'x': x, 'y': y, 'type': 'line'}]}),
+        dcc.Graph(id='chart3', figure={'data': [{'x': x, 'y': y, 'type': 'line'}]})
+    ], style={'width': '75%', 'display': 'inline-block', 'vertical-align': 'top', 'margin-left': '20%'})
 ])
 
-
-# 回调函数：根据选择的项目绘制折线图
-@app.callback(
-    Output('line-chart', 'figure'),
-    Input('project-dropdown', 'value')
-)
-def update_chart(selected_project):
-    if selected_project == 'A':
-        fig = px.line(df_A, x=df_A.index, y=['TRUE', 'predict'], title='项目A')
-    else:
-        fig = px.line(df_B, x=df_B.index, y=['TRUE', 'predict'], title='项目B')
-    return fig
-
-
-# 运行应用
+# 运行应用程序
 if __name__ == '__main__':
-    app.run_server(debug=True, host='127.0.0.1', port=8082)
+    app.run_server(debug=True)
