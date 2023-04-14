@@ -2,79 +2,58 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.express as px
-import pandas as pd
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 
-# read the data from the 'megnet_kvrh.csv' and 'megnet_dielectric.csv' files
-df_C = pd.read_csv('megnet_kvrh.csv')
-df_D = pd.read_csv('megnet_dielectric.csv')
-
-# define the app
+# 创建Dash应用
 app = dash.Dash(__name__)
 
-# define the layout of the app
-app.layout = html.Div(children=[
-    html.H1(children='Box Plot'),
-    dcc.Dropdown(
-        id='data-dropdown',
-        options=[
-            {'label': 'KVRH Data', 'value': 'C'},
-            {'label': 'Dielectric Data', 'value': 'D'}
-        ],
-        value='C'
-    ),
-    dcc.Graph(
-        id='box-plot',
-        figure={
-            'data': [
-                {'y': df_C[col], 'type': 'box', 'name': col} for col in ['mae', 'mape', 'rmse']
-            ],
-            'layout': {
-                'title': 'Box Plot of mae, mape, and rmse values',
-                'yaxis': {'title': 'Values'}
-            }
-        }
-    ),
-    html.Div(
-        id='data-description',
-        children=[
-            html.P(id='kvrh-description', children='KVRH is a measure of a material\'s resistance to indentation'),
-            html.P(id='dielectric-description', children='Dielectric refers to the ability of a material to store electrical energy')
-        ]
-    )
-])
+# 生成数据
+np.random.seed(42)
+x = np.random.normal(0, 1, size=1000)
+y = np.random.normal(0, 1, size=1000)
 
-# define the callback function for the dropdown menu
+# 绘制图表
+fig = px.scatter(x=x, y=y)
+
+# 创建背景图片
+bg_color = (255, 255, 255)
+img_size = (600, 400)
+img = Image.new("RGB", img_size, bg_color)
+
+# 在背景图片上绘制文字
+draw = ImageDraw.Draw(img)
+font_size = 36
+font = ImageFont.truetype("Arial.ttf", font_size)
+text = "化学晶体预测"
+text_size = draw.textsize(text, font)
+text_pos = ((img_size[0] - text_size[0]) // 2, (img_size[1] - text_size[1]) // 2)
+draw.text(text_pos, text, font=font, fill=(0, 0, 0))
+
+# 将背景图片转换为Dash支持的格式
+bg_image = img.tobytes()
+
+# 定义页面布局
+app.layout = html.Div(style={'background-image': 'url(data:image/png;base64,' + bg_image.decode() + ')',
+                             'background-size': 'cover',
+                             'height': '100vh'},
+                      children=[
+                          html.H1('动态页面示例'),
+                          dcc.Graph(id='my-graph', figure=fig),
+                          dcc.Interval(id='update-interval', interval=1000, n_intervals=0)
+                      ])
+
+# 定义更新回调函数
 @app.callback(
-    dash.dependencies.Output('box-plot', 'figure'),
-    [dash.dependencies.Input('data-dropdown', 'value')]
+    dash.dependencies.Output('my-graph', 'figure'),
+    dash.dependencies.Input('update-interval', 'n_intervals')
 )
-def update_figure(selected_data):
-    if selected_data == 'C':
-        data = df_C
-    else:
-        data = df_D
-    return {
-        'data': [
-            {'y': data[col], 'type': 'box', 'name': col} for col in ['mae', 'mape', 'rmse']
-        ],
-        'layout': {
-            'title': 'Box Plot of mae, mape, and rmse values for ' + selected_data + ' Data',
-            'yaxis': {'title': 'Values'}
-        }
-    }
+def update_graph(n):
+    # 更新数据
+    x_new = np.random.normal(0, 1, size=1000)
+    y_new = np.random.normal(0, 1, size=1000)
+    fig_new = px.scatter(x=x_new, y=y_new)
+    return fig_new
 
-# define the callback function for the data descriptions
-@app.callback(
-    dash.dependencies.Output('kvrh-description', 'style'),
-    dash.dependencies.Output('dielectric-description', 'style'),
-    [dash.dependencies.Input('data-dropdown', 'value')]
-)
-def update_data_description(selected_data):
-    if selected_data == 'C':
-        return {'display': 'block'}, {'display': 'none'}
-    else:
-        return {'display': 'none'}, {'display': 'block'}
-
-# run the app
 if __name__ == '__main__':
     app.run_server(debug=True)
