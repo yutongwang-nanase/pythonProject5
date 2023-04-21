@@ -1,59 +1,56 @@
 import dash
+import plotly.express as px
+import pandas as pd
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.express as px
-import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from dash.dependencies import Input, Output
+
+# 读取数据
+df = pd.read_csv('picture2/cgcnn_e_form.csv')
 
 # 创建Dash应用
 app = dash.Dash(__name__)
 
-# 生成数据
-np.random.seed(42)
-x = np.random.normal(0, 1, size=1000)
-y = np.random.normal(0, 1, size=1000)
+# 构建UI界面
+app.layout = html.Div([
+    html.H1("CGCNN 真实值与预测值对比图"),
+    dcc.Dropdown(
+        id='project-dropdown',
+        options=[
+            {'label': 'e_form', 'value': 'e_form'},
+            {'label': 'gap', 'value': 'gap'},
+            {'label': 'gvrh', 'value': 'gvrh'},
+        ],
+        value='e_form'
+    ),
+    dcc.Graph(id='scatter-plot')
+])
 
-# 绘制图表
-fig = px.scatter(x=x, y=y)
 
-# 创建背景图片
-bg_color = (255, 255, 255)
-img_size = (600, 400)
-img = Image.new("RGB", img_size, bg_color)
+# 定义回调函数
+@app.callback(Output('scatter-plot', 'figure'),
+              Input('project-dropdown', 'value'))
+def update_scatter_plot(selected_project):
+    # 根据下拉列表选择更新数据
+    if selected_project == 'e_form':
+        df = pd.read_csv('picture2/cgcnn_e_form.csv')
+    elif selected_project == 'gap':
+        df = pd.read_csv('picture2/cgcnn_gap.csv')
+    elif selected_project == 'gvrh':
+        df = pd.read_csv('picture2/cgcnn_gvrh.csv')
 
-# 在背景图片上绘制文字
-draw = ImageDraw.Draw(img)
-font_size = 36
-font = ImageFont.truetype("Arial.ttf", font_size)
-text = "化学晶体预测"
-text_size = draw.textsize(text, font)
-text_pos = ((img_size[0] - text_size[0]) // 2, (img_size[1] - text_size[1]) // 2)
-draw.text(text_pos, text, font=font, fill=(0, 0, 0))
+    # 创建散点图
+    fig = px.scatter(df, x="TRUE", y="predict", color="AE", hover_data=["id"])
 
-# 将背景图片转换为Dash支持的格式
-bg_image = img.tobytes()
+    # 添加布局信息
+    fig.update_layout(title=f"{selected_project.upper()}真实值与预测值对比图",
+                      xaxis_title="真实值",
+                      yaxis_title="预测值",
+                      coloraxis_colorbar=dict(title="AE"))
 
-# 定义页面布局
-app.layout = html.Div(style={'background-image': 'url(data:image/png;base64,' + bg_image.decode() + ')',
-                             'background-size': 'cover',
-                             'height': '100vh'},
-                      children=[
-                          html.H1('动态页面示例'),
-                          dcc.Graph(id='my-graph', figure=fig),
-                          dcc.Interval(id='update-interval', interval=1000, n_intervals=0)
-                      ])
+    return fig
 
-# 定义更新回调函数
-@app.callback(
-    dash.dependencies.Output('my-graph', 'figure'),
-    dash.dependencies.Input('update-interval', 'n_intervals')
-)
-def update_graph(n):
-    # 更新数据
-    x_new = np.random.normal(0, 1, size=1000)
-    y_new = np.random.normal(0, 1, size=1000)
-    fig_new = px.scatter(x=x_new, y=y_new)
-    return fig_new
 
+# 运行应用
 if __name__ == '__main__':
     app.run_server(debug=True)
