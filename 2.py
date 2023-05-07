@@ -1,6 +1,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
@@ -114,6 +115,80 @@ df_phon = pd.read_csv('picture2/cgcnn_phonons.csv')
 df_C = pd.read_csv('megnet_kvrh.csv')
 df_D = pd.read_csv('megnet_dielectric.csv')
 
+df = pd.DataFrame({
+    'Task name': ['matbench_steels', 'matbench_jdft2d', 'matbench_phonons', 'matbench_expt_gap', 'matbench_dielectric',
+                  'matbench_expt_is_metal', 'matbench_glass', 'matbench_log_gvrh', 'matbench_log_kvrh',
+                  'matbench_perovskites', 'matbench_mp_gap', 'matbench_mp_is_metal', 'mat_mp_e_form'],
+    'Task type/input': ['regression/composition', 'regression/structure', 'regression/structure',
+                        'regression/composition', 'regression/structure', 'classification/composition',
+                        'classification/composition', 'regression/structure', 'regression/structure',
+                        'regression/structure', 'regression/structure', 'classification/structure',
+                        'regression/structure'],
+    'Target column (unit)': ['yield strength (MPa)', 'exfoliation_en (meV/atom)', 'last phdos peak (cm^-1)',
+                             'gap expt (eV)', 'n (unitless)', 'is_metal', 'gfa', 'log10(G_VRH (log10(GPa))',
+                             'log10(K_VRH) (log10(GPa))', 'e_form (eV/unit cell)', 'gap pbe (eV)', 'is_metal',
+                             'e_form (eV/atom)'],
+    'Samples': [312, 636, 1265, 4604, 4764, 4921, 5680, 10987, 10987, 18928, 106113, 106113, 132752],
+    'MAD (regression) or Fraction True (classification)': [229.3743, 67.202, 323.7870, 1.1432, 0.8085, 0.4981, 0.7104,
+                                                           0.2931, 0.2897, 0.5660, 1.3271, 0.4349, 1.0059],
+    '': ['download, interactive', 'download, interactive', 'download, interactive', 'download, interactive',
+         'download, interactive', 'download, interactive', 'download, interactive', 'download, interactive',
+         'download, interactive', 'download, interactive', 'download, interactive', 'download, interactive',
+         'download, interactive'],
+    'Submissions': [9, 14, 14, 11, 14, 6, 6, 14, 14, 14, 14, 11, 16],
+    'Task description': ['Predict the yield strength of steel alloys based on their composition',
+                         'Predict the exfoliation energy of 2D materials based on their structure',
+                         'Predict the frequency of the last peak in the phonon density of states of materials based on their structure',
+                         'Predict the experimental band gap of inorganic compounds based on their composition',
+                         'Predict the refractive index of materials based on their structure',
+                         'Classify inorganic compounds as metals or non-metals based on their composition',
+                         'Classify inorganic compounds as glass formers or glass modifiers based on their composition',
+                         'Predict the shear modulus of materials based on their structure',
+                         'Predict the bulk modulus of materials based on their structure',
+                         'Predict the formation energy of perovskite materials based on their structure',
+                         'Predict the band gap of inorganic compounds based on their structure',
+                         'Classify inorganic compounds as metals or non-metals based on their structure',
+                         'Predict the formation energy per atom of inorganic compounds based on their structure'],
+    'Task category': ['Materials science', 'Materials science', 'Materials science', 'Materials science',
+                      'Materials science', 'Materials science', 'Materials science', 'Materials science',
+                      'Materials science', 'Materials science', 'Materials science', 'Materials science',
+                      'Materials science'],
+    'Task difficulty': ['Intermediate', 'Advanced', 'Advanced', 'Intermediate', 'Intermediate', 'Beginner', 'Beginner',
+                        'Advanced', 'Advanced', 'Advanced', 'Advanced', 'Beginner', 'Advanced']
+})
+
+num_labels = ['<1k', '1k-10k', '10k-100k', '>=100k']
+num_values = [2, 5, 3, 3]
+num_colors = ['#7B68EE', '#6A5ACD', '#483D8B', '#2c2656']
+
+app_colors = ['#FFA07A', '#FF7F50', '#FF6347', '#FF4500', '#FF8C00']
+app_labels = ['stability', 'electronic', 'mechanical', 'optical', 'thermal']
+app_values = [4, 4, 3, 1, 1]
+
+type_colors = ['#FFDAB9', '#F4A460']
+type_labels = ['regression', 'classification']
+type_values = [3, 10]
+
+data_colors = ['#90EE90', '#32CD32']
+data_labels = ['DTF', 'experiment']
+data_values = [9, 4]
+
+# Create pie charts
+num_chart = go.Pie(labels=num_labels, values=num_values, marker=dict(colors=num_colors))
+app_chart = go.Pie(labels=app_labels, values=app_values, marker=dict(colors=app_colors))
+type_chart = go.Pie(labels=type_labels, values=type_values, marker=dict(colors=type_colors))
+data_chart = go.Pie(labels=data_labels, values=data_values, marker=dict(colors=data_colors))
+
+# Define layout for each pie chart
+num_layout = go.Layout(title='Number of Samples', width=460,
+                       height=470)
+app_layout = go.Layout(title='Matbench Property Distribution', width=460,
+                       height=470)
+type_layout = go.Layout(title='Task Type Distribution', width=460,
+                        height=470)
+data_layout = go.Layout(title='Data Type Distribution', width=460,
+                        height=470)
+
 paragraph1 = html.Div([
     html.H1('欢迎来到我的网页！'),
     html.P('我的网页灵感来源于matbench，旨在帮助您更好地理解材料科学和计算材料学。'),
@@ -212,14 +287,14 @@ app.layout = html.Div(children=[
         ),
         # 在页头右侧添加静态图标，点击跳转到 GitHub 页面
         html.A(
-            href="https://github.com/",
+            href="https://github.com/materialsproject/matbench",
             target="_blank",
             children=html.Div([
                 html.Img(
                     src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
                     style={"height": "50px", "width": "50px", "margin-right": "10px"}
                 ),
-                html.Span("Visit My GitHub", style={"color": "white", "margin-right": "70px"})
+                html.Span("Visit Matbench", style={"color": "white", "margin-right": "70px"})
             ]),
             style={"display": "flex", "align-items": "center", "text-decoration": "none"}
         )
@@ -241,8 +316,61 @@ app.layout = html.Div(children=[
             html.Br(),
             html.A('跳转到图表4', href='#Comparison'),
             html.Br(),
+
         ], style={'position': 'fixed', 'width': 'auto', 'left': '12%', 'padding-top': '20px',
-                  'background-color': '#f2f2f2'}),
+                  'background-color': '#476481'}),
+        html.Div([
+            html.H1('Download'),
+            html.Br(),
+            html.A('下载matbench steels数据集', href="https://ml.materialsproject.org/projects/matbench_steels.json.gz",
+                   style={'color': '#FFDAB9', 'text-decoration': 'none', 'font-weight': 'bold'}),
+            html.Br(),
+            html.A('下载matbench jdft2d数据集', href="https://ml.materialsproject.org/projects/matbench_jdft2d.json.gz",
+                   style={'color': '#FFDAB9', 'text-decoration': 'none', 'font-weight': 'bold'}),
+            html.Br(),
+            html.A('下载matbench phonons数据集',
+                   href="https://ml.materialsproject.org/projects/matbench_phonons.json.gz",
+                   style={'color': '#FFDAB9', 'text-decoration': 'none', 'font-weight': 'bold'}),
+            html.Br(),
+            html.A('下载matbench expt gap数据集',
+                   href="https://ml.materialsproject.org/projects/matbench_expt_gap.json.gz",
+                   style={'color': '#FFDAB9', 'text-decoration': 'none', 'font-weight': 'bold'}),
+            html.Br(),
+            html.A('下载matbench dielectric数据集',
+                   href="https://ml.materialsproject.org/projects/matbench_dielectric.json.gz",
+                   style={'color': '#FFDAB9', 'text-decoration': 'none', 'font-weight': 'bold'}),
+            html.Br(),
+            html.A('下载matbench expt is metal数据集',
+                   href="https://ml.materialsproject.org/projects/matbench_expt_is_metal.json.gz",
+                   style={'color': '#FFDAB9', 'text-decoration': 'none', 'font-weight': 'bold'}),
+            html.Br(),
+            html.A('下载matbench glass数据集', href="https://ml.materialsproject.org/projects/matbench_glass.json.gz",
+                   style={'color': '#FFDAB9', 'text-decoration': 'none', 'font-weight': 'bold'}),
+            html.Br(),
+            html.A('下载matbench log gvrh数据集',
+                   href="https://ml.materialsproject.org/projects/matbench_log_gvrh.json.gz",
+                   style={'color': '#FFDAB9', 'text-decoration': 'none', 'font-weight': 'bold'}),
+            html.Br(),
+            html.A('下载matbench log kvrh数据集',
+                   href="https://ml.materialsproject.org/projects/matbench_log_kvrh.json.gz",
+                   style={'color': '#FFDAB9', 'text-decoration': 'none', 'font-weight': 'bold'}),
+            html.Br(),
+            html.A('下载matbench perovskites数据集',
+                   href="https://ml.materialsproject.org/projects/matbench_perovskites.json.gz",
+                   style={'color': '#FFDAB9', 'text-decoration': 'none', 'font-weight': 'bold'}),
+            html.Br(),
+            html.A('下载matbench mp gap数据集', href="https://ml.materialsproject.org/projects/matbench_mp_gap.json.gz",
+                   style={'color': '#FFDAB9', 'text-decoration': 'none', 'font-weight': 'bold'}),
+            html.Br(),
+            html.A('下载matbench mp is metal数据集',
+                   href="https://ml.materialsproject.org/projects/matbench_mp_is_metal.json.gz",
+                   style={'color': '#FFDAB9', 'text-decoration': 'none', 'font-weight': 'bold'}),
+            html.Br(),
+            html.A('下载mat mp e form数据集', href="https://ml.materialsproject.org/projects/mat_mp_e_form.json.gz",
+                   style={'color': '#FFDAB9', 'text-decoration': 'none', 'font-weight': 'bold'})
+
+        ], style={'position': 'fixed', 'width': 'auto', 'right': '0%', 'padding-top': '20px',
+                  'background-color': '#476481'}),
 
         html.Div([
             html.H1('介绍'),
@@ -251,6 +379,119 @@ app.layout = html.Div(children=[
                 paragraph2,
                 paragraph3
             ]),
+
+            html.Div([
+                html.Div([
+                    dash_table.DataTable(
+                        id='table1',
+                        columns=[
+                            {'name': 'Task name', 'id': 'Task name'},
+                            {'name': 'Task type/input', 'id': 'Task type/input'},
+                            {'name': 'Target column (unit)', 'id': 'Target column (unit)'},
+                            {'name': 'Submissions', 'id': 'Submissions'},
+                            {'name': 'Samples', 'id': 'Samples'}
+                        ],
+                        data=df.to_dict('records'),
+                        style_header={
+                            'backgroundColor': '#2c3e50',
+                            'color': 'white',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'border': '1px solid white'
+                        },
+                        style_cell={
+                            'backgroundColor': '#34495e',
+                            'color': 'white',
+                            'textAlign': 'center',
+                            'border': '1px solid white'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#2c3e50'
+                            },
+                            {
+                                'if': {'column_id': 'Task difficulty'},
+                                'backgroundColor': '#16a085',
+                                'color': 'white'
+                            },
+                            {
+                                'if': {'column_id': 'Task category'},
+                                'backgroundColor': '#8e44ad',
+                                'color': 'white'
+                            },
+                            {
+                                'if': {'state': 'active'},
+                                'backgroundColor': 'inherit !important',
+                                'border': 'inherit !important'
+                            }
+                        ]
+                    )
+                ]),
+                html.Br(),
+                html.Div([
+                    dash_table.DataTable(
+                        id='table2',
+                        columns=[
+                            {'name': 'MAD or Fraction True ',
+                             'id': 'MAD (regression) or Fraction True (classification)'},
+
+                            {'name': 'Task description', 'id': 'Task description'},
+                            {'name': 'Task difficulty', 'id': 'Task difficulty'}
+                        ],
+                        data=df.to_dict('records'),
+                        style_header={
+                            'backgroundColor': '#2c3e50',
+                            'color': 'white',
+                            'fontWeight': 'bold',
+                            'textAlign': 'center',
+                            'border': '1px solid white'
+                        },
+                        style_cell={
+                            'backgroundColor': '#34495e',
+                            'color': 'white',
+                            'textAlign': 'center',
+                            'border': '1px solid white'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': '#2c3e50'
+                            },
+                            {
+                                'if': {'column_id': 'Task difficulty'},
+                                'backgroundColor': '#16a085',
+                                'color': 'white'
+                            },
+                            {
+                                'if': {'column_id': 'Task category'},
+                                'backgroundColor': '#8e44ad',
+                                'color': 'white'
+                            },
+                            {
+                                'if': {'state': 'active'},
+                                'backgroundColor': 'inherit !important',
+                                'border': 'inherit !important'
+                            }
+                        ]
+                    )
+                ])
+            ]),
+
+            html.Div([
+                html.H1('Matbench Dataset Visualization'),
+                html.Table([
+                    html.Tr([
+                        html.Td(dcc.Graph(id='num-chart', figure={'data': [num_chart], 'layout': num_layout})),
+                        html.Td(dcc.Graph(id='app-chart', figure={'data': [app_chart], 'layout': app_layout})),
+                    ]),
+                    html.Tr([
+                        html.Td(dcc.Graph(id='type-chart', figure={'data': [type_chart], 'layout': type_layout})),
+                        html.Td(dcc.Graph(id='data-chart', figure={'data': [data_chart], 'layout': data_layout})),
+                    ])
+                ])
+            ]),
+
             html.H1('比赛成绩', id='score'),
             dcc.Graph(
                 id='score-graph',
@@ -310,7 +551,7 @@ app.layout = html.Div(children=[
                     value=['CGCNN', 'DimeNet', 'MEGNet'],
                     style={'display': 'none'}
                 )
-            ]),
+            ], style={'background-color': 'white'}),
             html.Div([
                 html.Br(),
                 html.Br(),
@@ -450,19 +691,38 @@ app.layout = html.Div(children=[
                 )
             ]),
 
-        ], style={'width': '75%', 'display': 'inline-block', 'vertical-align': 'top', 'margin-left': '20%',
-                  'background-color': '#f2f2f2'}),
+        ], style={'width': '60%', 'display': 'inline-block', 'vertical-align': 'top', 'margin-left': '20%',
+                  'background-color': '#476481'}),
 
-        html.P('这是底部区域', style={'height': '300px', 'background-color': '#f2f2f2'}, )
-    ], style={'background-color': '#f2f2f2'}
+        html.P('这是底部区域', style={'height': '300px', 'background-color': '#f2f2f2'}, ),
+        # html.Div(children=[
+        #     html.P(children='版权所有 ©2023 XYZ 公司. All rights reserved.'),
+        #     html.P(children=[
+        #         '联系我们：',
+        #         html.A('info@xyz.com', href='mailto:info@xyz.com'),
+        #         ' | ',
+        #         html.A('400-123-4567', href='tel:400-123-4567')
+        #     ]),
+        #     html.Ul(children=[
+        #         html.Li(html.A('关于我们', href='#')),
+        #         html.Li(html.A('服务条款', href='#')),
+        #         html.Li(html.A('隐私政策', href='#')),
+        #         html.Li(html.A('常见问题', href='#')),
+        #         html.Li(html.A('帮助中心', href='#'))
+        #     ]),
+        #     html.Div(children=[
+        #         html.A(html.I(className='fab fa-facebook-f'), href='#'),
+        #         html.A(html.I(className='fab fa-twitter'), href='#'),
+        #         html.A(html.I(className='fab fa-instagram'), href='#'),
+        #         html.A(html.I(className='fab fa-linkedin'), href='#'),
+        #         html.A(html.I(className='fab fa-youtube'), href='#')
+        #     ], className='social-media')
+        # ], className='container')
+    ], style={'background-color': '#476481'}
 
     ),
 
 ])
-
-
-# 将三个段落组合在一起
-# app.layout =
 
 
 # 回调函数，用于更新图表
@@ -569,14 +829,14 @@ def update_scatter_plot(selected_project):
     elif selected_project == 'G':
         df = pd.read_csv('picture2/cgcnn_perovskites.csv')
 
-# {'label': 'kvrh', 'value': 'A'},
-# {'label': 'jdft2d', 'value': 'B'},
-# {'label': 'gvrh', 'value': 'C'},
-# {'label': 'gap', 'value': 'D'},
-# {'label': 'dielectric', 'value': 'E'},
-# {'label': 'phonons', 'value': 'F'},
-# {'label': 'perovskites', 'value': 'G'},
-# {'label': 'e_form', 'value': 'H'},
+    # {'label': 'kvrh', 'value': 'A'},
+    # {'label': 'jdft2d', 'value': 'B'},
+    # {'label': 'gvrh', 'value': 'C'},
+    # {'label': 'gap', 'value': 'D'},
+    # {'label': 'dielectric', 'value': 'E'},
+    # {'label': 'phonons', 'value': 'F'},
+    # {'label': 'perovskites', 'value': 'G'},
+    # {'label': 'e_form', 'value': 'H'},
 
     # 创建散点图
     fig = px.scatter(df, x="TRUE", y="predict", color="AE", hover_data=["id"])
@@ -588,7 +848,6 @@ def update_scatter_plot(selected_project):
                       coloraxis_colorbar=dict(title="AE"))
 
     return fig
-
 
 
 @app.callback(
